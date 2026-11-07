@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pharmaceutical Management System (PMS)</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Google Fonts & Font Awesome for icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Chart.js for BI graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="top-nav">
+    <div class="nav-brand">
+      <i class="fa-solid fa-staff-snake brand-icon"></i>
+      <div>
+        <span class="brand-title">PharmaFlow PMS</span>
+        <span class="brand-subtitle">Relational DBMS & Decision Intelligence</span>
+      </div>
+    </div>
+
+    <div class="user-profile-section">
+      <div class="drap-badge">
+        <i class="fa-solid fa-shield-halved"></i> DRAP MRP Compliance Active
+      </div>
+      <div class="user-chip">
+        <div class="avatar" id="userAvatar">A</div>
+        <div class="user-info">
+          <span class="user-name" id="userNameDisplay">Dr. Tariq Mahmood</span>
+          <span class="user-role-badge" id="userRoleBadge">Admin</span>
+        </div>
+        <select id="roleSwitcher" title="Switch demo role">
+          <option value="Admin">Role: Admin</option>
+          <option value="Pharmacist">Role: Pharmacist</option>
+          <option value="Cashier">Role: Cashier</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="dashboard">
+          <i class="fa-solid fa-chart-pie"></i> Dashboard & KPIs
+        </button>
+        <button class="nav-item" data-tab="pos">
+          <i class="fa-solid fa-cash-register"></i> Point of Sale (POS)
+        </button>
+        <button class="nav-item" data-tab="medicines">
+          <i class="fa-solid fa-pills"></i> Medicines & Inventory
+        </button>
+        <button class="nav-item" data-tab="suppliers">
+          <i class="fa-solid fa-truck-field"></i> Suppliers & Quotes
+        </button>
+        <button class="nav-item" data-tab="prescriptions">
+          <i class="fa-solid fa-file-prescription"></i> Prescriptions & Patients
+        </button>
+        <button class="nav-item" data-tab="bi-reports">
+          <i class="fa-solid fa-brain"></i> BI Analytics & Reports
+        </button>
+        <button class="nav-item" data-tab="db-architecture">
+          <i class="fa-solid fa-database"></i> DBMS Architecture & Schema
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="db-status-pill">
+          <span class="status-indicator"></span> SQLite / PostgreSQL Engine
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+
+      <!-- =================================================================== -->
+      <!-- TAB 1: DASHBOARD -->
+      <!-- =================================================================== -->
+      <section id="tab-dashboard" class="tab-pane active">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Executive Dashboard</h1>
+            <p class="view-desc">Live operational inventory metrics, revenue tracking, and compliance guards.</p>
+          </div>
+          <button class="btn btn-secondary" onclick="loadDashboardMetrics()">
+            <i class="fa-solid fa-rotate"></i> Refresh
+          </button>
+        </div>
+
+        <!-- Metric KPI Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card card-cyan">
+            <div class="kpi-icon"><i class="fa-solid fa-coins"></i></div>
+            <div class="kpi-content">
+              <span class="kpi-label">Today's Revenue</span>
+              <h2 class="kpi-value" id="kpiTodaySales">PKR 0.00</h2>
+              <span class="kpi-sub" id="kpiInvoicesCount">0 Invoices generated</span>
+            </div>
+          </div>
+
+          <div class="kpi-card card-amber">
+            <div class="kpi-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+            <div class="kpi-content">
+              <span class="kpi-label">Expiring in 30 Days</span>
+              <h2 class="kpi-value" id="kpiExpiringCount">0 Batches</h2>
+              <span class="kpi-sub text-danger" id="kpiExpirySub">Trigger blocks sales</span>
+            </div>
+          </div>
+
+          <div class="kpi-card card-rose">
+            <div class="kpi-icon"><i class="fa-solid fa-box-open"></i></div>
+            <div class="kpi-content">
+              <span class="kpi-label">Low Stock Alerts</span>
+              <h2 class="kpi-value" id="kpiLowStock">0 Items</h2>
+              <span class="kpi-sub text-warning" id="kpiLowStockSub">Below reorder threshold</span>
+            </div>
+          </div>
+
+          <div class="kpi-card card-emerald">
+            <div class="kpi-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+            <div class="kpi-content">
+              <span class="kpi-label">Active Inventory Value</span>
+              <h2 class="kpi-value" id="kpiInventoryVal">PKR 0.00</h2>
+              <span class="kpi-sub text-success">DRAP Price Monitored</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Charts & Alert Tables -->
+        <div class="grid-2-col">
+          <div class="content-card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-chart-line"></i> Daily Sales Trend (30 Days)</h3>
+            </div>
+            <div class="card-body">
+              <canvas id="salesTrendChart" height="150"></canvas>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-triangle-exclamation text-amber"></i> Batches Expiring Soon (View: ExpiringSoon)</h3>
+            </div>
+            <div class="card-body table-responsive">
+              <table class="data-table" id="expiringSoonTable">
+                <thead>
+                  <tr>
+                    <th>Batch</th>
+                    <th>Medicine</th>
+                    <th>Stock</th>
+                    <th>Expiry Date</th>
+                    <th>Risk Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td colspan="5" class="text-center">Loading expiring batches...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- TAB 2: POINT OF SALE (POS BILLING) -->
+      <!-- =================================================================== -->
+      <section id="tab-pos" class="tab-pane">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Point-of-Sale (POS) & Automated Dispensing</h1>
+            <p class="view-desc">Enforces DRAP MRP ceiling, prescription guards, and automated batch stock deduction.</p>
+          </div>
+        </div>
+
+        <div class="pos-layout">
+          <!-- Medicine Catalog & Search -->
+          <div class="pos-catalog-panel">
+            <div class="search-box-wrap">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="posSearchInput" placeholder="Search medicine name, generic formula, brand..." />
+            </div>
+
+            <div class="medicine-item-grid" id="posMedicineGrid">
+              <!-- Loaded via JavaScript -->
+            </div>
+          </div>
+
+          <!-- Billing Cart & Checkout -->
+          <div class="pos-checkout-panel">
+            <div class="content-card">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-receipt"></i> Active Invoice</h3>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label>Select Customer:</label>
+                  <select id="posCustomerSelect" class="form-control"></select>
+                </div>
+
+                <div class="form-group" id="posPrescriptionGroup">
+                  <label>Doctor's Prescription (Required for Scheduled Drugs):</label>
+                  <select id="posPrescriptionSelect" class="form-control">
+                    <option value="">-- No Prescription Selected (OTC Only) --</option>
+                  </select>
+                </div>
+
+                <div class="pos-cart-table-wrap">
+                  <table class="data-table" id="posCartTable">
+                    <thead>
+                      <tr>
+                        <th>Item</th>
+                        <th>Batch</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody id="posCartBody">
+                      <tr><td colspan="6" class="text-center text-muted">Cart is currently empty. Click medicines to add.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="cart-summary">
+                  <div class="summary-line">
+                    <span>Subtotal:</span>
+                    <strong id="posSubtotal">PKR 0.00</strong>
+                  </div>
+                  <div class="summary-line total-line">
+                    <span>Grand Total:</span>
+                    <span class="total-badge" id="posGrandTotal">PKR 0.00</span>
+                  </div>
+                </div>
+
+                <div id="posAlertBox" class="alert-box d-none"></div>
+
+                <button class="btn btn-primary btn-block" id="btnCompleteSale" onclick="executeSaleTransaction()">
+                  <i class="fa-solid fa-check-double"></i> Complete Sale (Atomic Transaction)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- TAB 3: MEDICINES & INVENTORY -->
+      <!-- =================================================================== -->
+      <section id="tab-medicines" class="tab-pane">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Medicine Catalog & Batch Inventory</h1>
+            <p class="view-desc">Track active pharmaceuticals, BCNF category/manufacturer relations, and batch lots.</p>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-primary" onclick="openModal('addMedicineModal')">
+              <i class="fa-solid fa-plus"></i> Register Medicine
+            </button>
+            <button class="btn btn-secondary" onclick="openModal('addBatchModal')">
+              <i class="fa-solid fa-boxes-stacked"></i> Receive Batch
+            </button>
+          </div>
+        </div>
+
+        <div class="content-card">
+          <div class="filter-bar">
+            <input type="text" id="medSearchInput" class="form-control" placeholder="Search medicines by name or category..." oninput="filterMedicinesTable()" />
+            <select id="medFilterCategory" class="form-control" onchange="filterMedicinesTable()">
+              <option value="">All Categories</option>
+            </select>
+            <select id="medFilterPricing" class="form-control" onchange="filterMedicinesTable()">
+              <option value="">All Pricing Types</option>
+              <option value="Regulated">Regulated (DRAP MRP)</option>
+              <option value="Deregulated">Deregulated</option>
+            </select>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table" id="medicinesTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Medicine Name</th>
+                  <th>Category</th>
+                  <th>Manufacturer</th>
+                  <th>Type</th>
+                  <th>Prescription?</th>
+                  <th>DRAP MRP</th>
+                  <th>Selling Price</th>
+                  <th>Stock</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="medicinesTableBody">
+                <tr><td colspan="10" class="text-center">Loading medicines catalog...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- TAB 4: SUPPLIERS & QUOTES -->
+      <!-- =================================================================== -->
+      <section id="tab-suppliers" class="tab-pane">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Supplier Procurement & Price Quotes</h1>
+            <p class="view-desc">Multi-vendor quote comparison and cheapest supplier discovery (View: CheapestSupplier).</p>
+          </div>
+        </div>
+
+        <div class="grid-2-col">
+          <div class="content-card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-hand-holding-dollar"></i> Cheapest Supplier by Drug (View: CheapestSupplier)</h3>
+            </div>
+            <div class="card-body table-responsive">
+              <table class="data-table" id="cheapestSupplierTable">
+                <thead>
+                  <tr>
+                    <th>Medicine</th>
+                    <th>Cheapest Vendor</th>
+                    <th>Quoted Rate</th>
+                    <th>Quote Date</th>
+                  </tr>
+                </thead>
+                <tbody id="cheapestSupplierBody">
+                  <tr><td colspan="4" class="text-center">Loading supplier quotes...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-warehouse"></i> Registered Pharmaceutical Wholesalers</h3>
+            </div>
+            <div class="card-body table-responsive">
+              <table class="data-table" id="supplierListTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Company Name</th>
+                    <th>Contact Phone</th>
+                    <th>Distribution Hub</th>
+                  </tr>
+                </thead>
+                <tbody id="supplierListBody">
+                  <tr><td colspan="4" class="text-center">Loading suppliers...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- TAB 5: PRESCRIPTIONS & PATIENTS -->
+      <!-- =================================================================== -->
+      <section id="tab-prescriptions" class="tab-pane">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Prescriptions & Regulatory Records</h1>
+            <p class="view-desc">Enforce prescription linkage for Schedule-G controlled and narcotic pharmaceuticals.</p>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('addPrescriptionModal')">
+            <i class="fa-solid fa-file-circle-plus"></i> Record Prescription
+          </button>
+        </div>
+
+        <div class="grid-2-col">
+          <div class="content-card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-prescription-bottle-medical"></i> Doctor Prescriptions</h3>
+            </div>
+            <div class="card-body table-responsive">
+              <table class="data-table" id="prescriptionsTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Patient Name</th>
+                    <th>Consulting Doctor</th>
+                    <th>Issue Date</th>
+                  </tr>
+                </thead>
+                <tbody id="prescriptionsTableBody">
+                  <tr><td colspan="4" class="text-center">Loading prescriptions...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-users"></i> Registered Patients / Customers</h3>
+            </div>
+            <div class="card-body table-responsive">
+              <table class="data-table" id="customersTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Patient Name</th>
+                    <th>Contact Phone</th>
+                  </tr>
+                </thead>
+                <tbody id="customersTableBody">
+                  <tr><td colspan="3" class="text-center">Loading customers...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- TAB 6: BUSINESS INTELLIGENCE (BI) REPORTS -->
+      <!-- =================================================================== -->
+      <section id="tab-bi-reports" class="tab-pane">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Business Intelligence & Executive Analytics</h1>
+            <p class="view-desc">OLAP views, profit margin distributions, DRAP compliance audits, and reorder projections.</p>
+          </div>
+        </div>
+
+        <div class="bi-tabs-bar">
+          <button class="btn-subtab active" onclick="switchBiTab('bi-margins')">Profit Margins (View: MarginReport)</button>
+          <button class="btn-subtab" onclick="switchBiTab('bi-compliance')">DRAP Price Ceiling Compliance</button>
+          <button class="btn-subtab" onclick="switchBiTab('bi-substitutes')">Salt Substitutes Finder</button>
+          <button class="btn-subtab" onclick="switchBiTab('bi-lowstock')">Smart Reorder Suggestions</button>
+        </div>
+
+        <!-- Subtab 1: Margins -->
+        <div id="subtab-bi-margins" class="bi-pane active">
+          <div class="content-card">
+            <div class="card-header">
+              <h3>Profit Margin Analysis per Batch</h3>
+            </div>
+            <div class="card-body table-responsive">
+              <table class="data-table" id="marginReportTable">
+                <thead>
+                  <tr>
+                    <th>Batch</th>
+                    <th>Medicine</th>
+                    <th>Category</th>
+                    <th>Cost (Purchase)</th>
+                    <th>Sale Price</th>
+                    <th>Unit Profit</th>
+                    <th>Margin %</th>
+                    <th>Health</th>
+                  </tr>
+                </thead>
+                <tbody id="marginReportBody">
+                  <tr><td colspan="8" class="text-center">Loading margin report...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subtab 2: DRAP Compliance -->
+        <div id="subtab-bi-compliance" class="bi-pane">
+          <div class="content-card">
+            <div class="card-header">
+              <h3>Government Price Compliance & Market Parity</h3>
+            </div>
+            <div class="card-body table-responsive">
+              <table class="data-table" id="complianceTable">
+                <thead>
+                  <tr>
+                    <th>Medicine</th>
+                    <th>Pricing Tier</th>
+                    <th>DRAP MRP</th>
+                    <th>Our Price</th>
+                    <th>Avg Market Price</th>
+                    <th>Compliance Status</th>
+                    <th>Market Parity</th>
+                  </tr>
+                </thead>
+                <tbody id="complianceBody">
+                  <tr><td colspan="7" class="text-center">Loading compliance metrics...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subtab 3: Salt Substitutes -->
+        <div id="subtab-bi-substitutes" class="bi-pane">
+          <div class="content-card">
+            <div class="card-header">
+              <h3>Affordable Generic Substitutes (Same Salt & Strength, Lower Price)</h3>
+            </div>
+            <div class="card-body table-responsive">
+              <table class="data-table" id="substitutesTable">
+                <thead>
+                  <tr>
+                    <th>Original Brand</th>
+                    <th>Salt (Active Formula)</th>
+                    <th>Strength</th>
+                    <th>Original Price</th>
+                    <th>Recommended Cheaper Brand</th>
+                    <th>Substitute Price</th>
+                    <th>Patient Savings</th>
+                  </tr>
+                </thead>
+                <tbody id="substitutesBody">
+                  <tr><td colspan="7" class="text-center">Loading generic alternatives...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subtab 4: Low Stock -->
+        <div id="subtab-bi-lowstock" class="bi-pane">
+          <div class="content-card">
+            <div class="card-header">
+              <h3>Critical Stock & Inventory Replenishment (View: LowStock)</h3>
+            </div>
+            <div class="card-body table-responsive">
+              <table class="data-table" id="lowStockTable">
+                <thead>
+                  <tr>
+                    <th>Medicine</th>
+                    <th>Category</th>
+                    <th>Manufacturer</th>
+                    <th>Reorder Level</th>
+                    <th>Valid Available Stock</th>
+                    <th>Shortfall</th>
+                    <th>Alert Priority</th>
+                  </tr>
+                </thead>
+                <tbody id="lowStockBody">
+                  <tr><td colspan="7" class="text-center">Loading replenishment status...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- TAB 7: DBMS ARCHITECTURE & SCHEMA EXPLORER -->
+      <!-- =================================================================== -->
+      <section id="tab-db-architecture" class="tab-pane">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">DBMS Relational Architecture & Normalization</h1>
+            <p class="view-desc">Formal verification of BCNF relations, Functional Dependencies, and Integrity Guards.</p>
+          </div>
+        </div>
+
+        <div class="grid-2-col">
+          <div class="content-card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-sitemap"></i> Decomposed Relations (BCNF)</h3>
+            </div>
+            <div class="card-body doc-content">
+              <ul>
+                <li><strong>Category</strong> (<u>CategoryID</u>, CategoryName)</li>
+                <li><strong>Manufacturer</strong> (<u>ManufacturerID</u>, ManufacturerName, Country)</li>
+                <li><strong>Medicine</strong> (<u>MedicineID</u>, Name, CategoryID*, ManufacturerID*, PricingCategory, RequiresPrescription, ReorderLevel)</li>
+                <li><strong>Salt</strong> (<u>SaltID</u>, SaltName)</li>
+                <li><strong>MedicineSalt</strong> (<u>MedicineID*, SaltID*</u>, Strength)</li>
+                <li><strong>Supplier</strong> (<u>SupplierID</u>, SupplierName, Phone, Address)</li>
+                <li><strong>Batch</strong> (<u>BatchID</u>, MedicineID*, SupplierID*, ExpiryDate, QuantityInStock, PurchasePrice)</li>
+                <li><strong>PurchaseOrder</strong> (<u>POID</u>, SupplierID*, OrderDate, Status)</li>
+                <li><strong>PurchaseOrderItem</strong> (<u>POID*, MedicineID*</u>, Quantity, Cost)</li>
+                <li><strong>Customer</strong> (<u>CustomerID</u>, CustomerName, Phone)</li>
+                <li><strong>Prescription</strong> (<u>PrescriptionID</u>, CustomerID*, DoctorName, PrescriptionDate)</li>
+                <li><strong>Staff</strong> (<u>StaffID</u>, StaffName, Role, Username, PasswordHash)</li>
+                <li><strong>Invoice</strong> (<u>InvoiceID</u>, CustomerID*, StaffID*, PrescriptionID*, InvoiceDate, TotalAmount)</li>
+                <li><strong>InvoiceItem</strong> (<u>InvoiceID*, BatchID*</u>, Quantity, UnitPriceAtSale)</li>
+                <li><strong>PriceHistory</strong> (<u>PriceID</u>, MedicineID*, MRP, SellingPrice, EffectiveFrom, EffectiveTo, ChangedBy*, Source)</li>
+                <li><strong>SupplierQuote</strong> (<u>QuoteID</u>, SupplierID*, MedicineID*, QuotedPrice, QuoteDate)</li>
+                <li><strong>MarketReference</strong> (<u>RefID</u>, MedicineID*, AvgMarketPrice, Source, RecordedDate)</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-lock"></i> ACID Constraints & Business Integrity</h3>
+            </div>
+            <div class="card-body doc-content">
+              <div class="info-alert">
+                <strong>Lossless Join & Dependency Preservation:</strong>
+                All decompositions preserve original functional dependencies through shared candidate keys with <code>ON DELETE RESTRICT</code> referential integrity.
+              </div>
+              <ul class="rule-list">
+                <li><i class="fa-solid fa-check text-success"></i> <strong>Expiry Guard:</strong> Triggers reject inserts of batch with <code>ExpiryDate &lt; CURRENT_DATE</code>.</li>
+                <li><i class="fa-solid fa-check text-success"></i> <strong>Price Ceiling:</strong> Prevents price gouging above DRAP notified MRP.</li>
+                <li><i class="fa-solid fa-check text-success"></i> <strong>Non-Negative Stock:</strong> Prevents phantom inventory through check constraints.</li>
+                <li><i class="fa-solid fa-check text-success"></i> <strong>Controlled Dispensing:</strong> Prescription ID verified before selling schedule narcotics.</li>
+                <li><i class="fa-solid fa-check text-success"></i> <strong>Temporal Price Versioning:</strong> Automatic timestamping of price revisions.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- Modal: Substitute Suggestions Modal -->
+  <div id="substituteModal" class="modal-overlay d-none">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-arrow-right-arrow-left"></i> Cheaper Substitute Recommendations</h3>
+        <button class="close-btn" onclick="closeModal('substituteModal')">&times;</button>
+      </div>
+      <div class="modal-body" id="substituteModalBody">
+        <p>Loading substitutes...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Price History Modal -->
+  <div id="priceHistoryModal" class="modal-overlay d-none">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-clock-rotate-left"></i> Temporal Price History</h3>
+        <button class="close-btn" onclick="closeModal('priceHistoryModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <table class="data-table" id="modalPriceHistoryTable">
+          <thead>
+            <tr>
+              <th>Effective From</th>
+              <th>Effective To</th>
+              <th>MRP</th>
+              <th>Selling Price</th>
+              <th>Authorized By</th>
+              <th>Notification Source</th>
+            </tr>
+          </thead>
+          <tbody id="modalPriceHistoryBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Register Medicine -->
+  <div id="addMedicineModal" class="modal-overlay d-none">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-pills"></i> Register New Medicine</h3>
+        <button class="close-btn" onclick="closeModal('addMedicineModal')">&times;</button>
+      </div>
+      <form id="addMedicineForm" onsubmit="submitNewMedicine(event)">
+        <div class="form-group">
+          <label>Brand Name & Dosage:</label>
+          <input type="text" id="newMedName" class="form-control" placeholder="e.g. Panadol Extra 500mg" required />
+        </div>
+        <div class="form-group">
+          <label>Therapeutic Category:</label>
+          <select id="newMedCategory" class="form-control" required></select>
+        </div>
+        <div class="form-group">
+          <label>Manufacturer:</label>
+          <select id="newMedManufacturer" class="form-control" required></select>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label>Pricing Category:</label>
+            <select id="newMedPricing" class="form-control">
+              <option value="Regulated">Regulated (DRAP MRP)</option>
+              <option value="Deregulated">Deregulated</option>
+            </select>
+          </div>
+          <div class="form-group col-6">
+            <label>Reorder Threshold Level:</label>
+            <input type="number" id="newMedReorder" class="form-control" value="50" min="0" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label>DRAP MRP (if Regulated):</label>
+            <input type="number" step="0.01" id="newMedMRP" class="form-control" placeholder="PKR" />
+          </div>
+          <div class="form-group col-6">
+            <label>Initial Selling Price:</label>
+            <input type="number" step="0.01" id="newMedPrice" class="form-control" placeholder="PKR" required />
+          </div>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" id="newMedPrescription" />
+          <label for="newMedPrescription">Requires Valid Doctor Prescription (Schedule Drug)</label>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('addMedicineModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Medicine</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Receive Stock Batch -->
+  <div id="addBatchModal" class="modal-overlay d-none">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-boxes-stacked"></i> Receive New Stock Batch</h3>
+        <button class="close-btn" onclick="closeModal('addBatchModal')">&times;</button>
+      </div>
+      <form id="addBatchForm" onsubmit="submitNewBatch(event)">
+        <div class="form-group">
+          <label>Medicine:</label>
+          <select id="newBatchMedicine" class="form-control" required></select>
+        </div>
+        <div class="form-group">
+          <label>Wholesaler / Supplier:</label>
+          <select id="newBatchSupplier" class="form-control" required></select>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label>Batch Expiry Date:</label>
+            <input type="date" id="newBatchExpiry" class="form-control" required />
+          </div>
+          <div class="form-group col-6">
+            <label>Quantity Received:</label>
+            <input type="number" id="newBatchQty" class="form-control" min="1" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Purchase Price Per Unit (PKR):</label>
+          <input type="number" step="0.01" id="newBatchCost" class="form-control" min="0" required />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('addBatchModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add to Inventory</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Record Prescription -->
+  <div id="addPrescriptionModal" class="modal-overlay d-none">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-file-prescription"></i> Record Doctor's Prescription</h3>
+        <button class="close-btn" onclick="closeModal('addPrescriptionModal')">&times;</button>
+      </div>
+      <form id="addPrescriptionForm" onsubmit="submitNewPrescription(event)">
+        <div class="form-group">
+          <label>Patient Name:</label>
+          <select id="newPrescCustomer" class="form-control" required></select>
+        </div>
+        <div class="form-group">
+          <label>Doctor's Full Name & Designation:</label>
+          <input type="text" id="newPrescDoctor" class="form-control" placeholder="e.g. Dr. A. R. Jamali, Consultant" required />
+        </div>
+        <div class="form-group">
+          <label>Prescription Issue Date:</label>
+          <input type="date" id="newPrescDate" class="form-control" required />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('addPrescriptionModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Prescription</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Printable Invoice Receipt Section -->
+  <div id="printableInvoice" class="printable-invoice d-none">
+    <div class="print-header">
+      <h2>PHARMAFLOW HEALTH PHARMACY</h2>
+      <p>Licensed Pharmacy & Healthcare Dispensary</p>
+      <p>Tax Reg: PK-DRAP-784910 | Official Sales Receipt</p>
+      <hr />
+    </div>
+    <div class="print-details">
+      <div><strong>Invoice #: </strong><span id="printInvId"></span></div>
+      <div><strong>Date: </strong><span id="printInvDate"></span></div>
+      <div><strong>Cashier: </strong><span id="printInvCashier"></span></div>
+      <div><strong>Customer: </strong><span id="printInvCustomer"></span></div>
+      <div><strong>Prescription Ref: </strong><span id="printInvPresc"></span></div>
+    </div>
+    <hr />
+    <table class="print-table">
+      <thead>
+        <tr>
+          <th>Medicine</th>
+          <th>Batch</th>
+          <th>Qty</th>
+          <th>Rate</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody id="printInvBody"></tbody>
+    </table>
+    <hr />
+    <div class="print-total">
+      <h3>Total Amount: <span id="printInvTotal"></span> PKR</h3>
+    </div>
+    <div class="print-footer">
+      <p>Thank you for choosing PharmaFlow! DRAP Price Compliance Guaranteed.</p>
+      <p>Medicines once sold can only be exchanged within 48 hours with receipt.</p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
