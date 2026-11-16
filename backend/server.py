@@ -658,7 +658,10 @@ class PMSRequestHandler(BaseHTTPRequestHandler):
             return self._send_error("Endpoint not found", 404)
 
 
-def run_server(port=5000):
+def run_server(port=None):
+    if port is None:
+        port = int(os.environ.get("PORT", "5000"))
+        
     # Ensure database exists
     if not os.path.exists(DB_PATH):
         print("[!] Database not found. Running database initializer...")
